@@ -26,7 +26,8 @@ DEFAULT_TIMEOUT = 10
 __all__ = ['Error', 'Response', 'BaseAPI', 'API', 'Auth', 'Users', 'Groups',
            'Channels', 'Chat', 'IM', 'IncomingWebhook', 'Search', 'Files',
            'Stars', 'Emoji', 'Presence', 'RTM', 'Team', 'Reactions', 'Pins',
-           'UserGroups', 'UserGroupsUsers', 'MPIM', 'OAuth', 'DND', 'Slacker']
+           'UserGroups', 'UserGroupsUsers', 'UserAdmin', 'MPIM', 'OAuth', 'DND',
+           'Slacker']
 
 
 class Error(Exception):
@@ -407,11 +408,11 @@ class Stars(BaseAPI):
                              'channel': channel,
                              'timestamp': timestamp
                          })
-    
+
     def list(self, user=None, count=None, page=None):
         return self.get('stars.list',
                         params={'user': user, 'count': count, 'page': page})
-    
+
     def remove(self, file_=None, file_comment=None, channel=None, timestamp=None):
         assert file_ or file_comment or channel
 
@@ -635,6 +636,39 @@ class UserGroups(BaseAPI):
         })
 
 
+class UserAdmin(BaseAPI):
+    def invite(self, email, first_name=None, last_name=None, set_active=True, channels=None, extra_message=None):
+        if isinstance(channels, (tuple, list)):
+            channels = ','.join(channels)
+
+        return self.post('users.admin.invite', data={
+            'email': email,
+            'first_name': first_name,
+            'last_name': last_name,
+            'set_active': set_active,
+            'channels': channels,
+            'extra_message': extra_message,
+        })
+
+    def update_profile(self, user, profile=None):
+        return self.post('users.profile.set', data={
+            'user': user,
+            'profile': profile,
+        })
+
+    def set_regular(self, user):
+        return self.post('users.admin.setRegular', data={
+            'user': user,
+            'set_active': True,
+        })
+
+    def set_admin(self, user):
+        return self.post('users.admin.setAdmin', data={
+            'user': user,
+            'set_active': True,
+        })
+
+
 class DND(BaseAPI):
     def team_info(self, users=None):
         if isinstance(users, (tuple, list)):
@@ -706,6 +740,7 @@ class Slacker(object):
         self.channels = Channels(token=token, timeout=timeout)
         self.presence = Presence(token=token, timeout=timeout)
         self.reactions = Reactions(token=token, timeout=timeout)
+        self.useradmin = UserAdmin(token=token, timeout=timeout)
         self.usergroups = UserGroups(token=token, timeout=timeout)
         self.incomingwebhook = IncomingWebhook(url=incoming_webhook_url,
                                                timeout=timeout)
