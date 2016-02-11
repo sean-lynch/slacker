@@ -637,7 +637,8 @@ class UserGroups(BaseAPI):
 
 
 class UserAdmin(BaseAPI):
-    def invite(self, email, first_name=None, last_name=None, set_active=True, channels=None, extra_message=None):
+    def invite(self, email, first_name=None, last_name=None, set_active=True, channels=None,
+               extra_message=None):
         if isinstance(channels, (tuple, list)):
             channels = ','.join(channels)
 
