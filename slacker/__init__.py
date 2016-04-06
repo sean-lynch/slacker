@@ -692,7 +692,6 @@ class UserAdmin(BaseAPI):
             'last_name': last_name,
             'set_active': set_active,
             'channels': channels,
-            'extra_message': extra_message,
         })
 
     def update_profile(self, user, profile=None):
