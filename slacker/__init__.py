@@ -27,7 +27,7 @@ __all__ = ['Error', 'Response', 'BaseAPI', 'API', 'Auth', 'Users', 'Groups',
            'Channels', 'Chat', 'IM', 'IncomingWebhook', 'Search', 'Files',
            'Stars', 'Emoji', 'Presence', 'RTM', 'Team', 'Reactions', 'Pins',
            'UserGroups', 'UserGroupsUsers', 'UserAdmin', 'MPIM', 'OAuth', 'DND',
-           'Slacker']
+           'FilesComments', 'Slacker']
 
 
 class Error(Exception):
@@ -97,7 +97,6 @@ class Users(BaseAPI):
         return self.get('users.getPresence', params={'user': user})
 
     def set_presence(self, presence):
-        assert presence in Presence.TYPES, 'Invalid presence type'
         return self.post('users.setPresence', data={'presence': presence})
 
     def get_user_id(self, user_name):
@@ -359,7 +358,29 @@ class Search(BaseAPI):
                         })
 
 
+class FilesComments(BaseAPI):
+    def add(self, file_, comment):
+        return self.post('files.comments.add',
+                         data={'file': file_, 'comment': comment})
+
+    def delete(self, file_, id):
+        return self.post('files.comments.delete',
+                         data={'file': file_, 'id': id})
+
+    def edit(self, file_, id, comment):
+        return self.post('files.comments.edit',
+                         data={'file': file, 'id': id, 'comment': comment})
+
+
 class Files(BaseAPI):
+    def __init__(self, *args, **kwargs):
+        super(Files, self).__init__(*args, **kwargs)
+        self._comments = FilesComments(*args, **kwargs)
+
+    @property
+    def comments(self):
+        return self._comments
+
     def list(self, user=None, ts_from=None, ts_to=None, types=None,
              count=None, page=None):
         return self.get('files.list',
@@ -395,6 +416,12 @@ class Files(BaseAPI):
 
     def delete(self, file_):
         return self.post('files.delete', data={'file': file_})
+
+    def revoke_public_url(self, file_):
+        return self.post('files.revokePublicURL', data={'file': file_})
+
+    def shared_public_url(self, file_):
+        return self.post('files.sharedPublicURL', data={'file': file_})
 
 
 class Stars(BaseAPI):
@@ -441,8 +468,13 @@ class Presence(BaseAPI):
 
 
 class RTM(BaseAPI):
-    def start(self):
-        return self.get('rtm.start')
+    def start(self, simple_latest=False, no_unreads=False, mpim_aware=False):
+        return self.get('rtm.start',
+                        params={
+                            'simple_latest': int(simple_latest),
+                            'no_unreads': int(no_unreads),
+                            'mpim_aware': int(mpim_aware),
+                        })
 
 
 class Team(BaseAPI):
@@ -452,6 +484,18 @@ class Team(BaseAPI):
     def access_logs(self, count=None, page=None):
         return self.get('team.accessLogs',
                         params={'count': count, 'page': page})
+
+    def integration_logs(self, service_id=None, app_id=None, user=None,
+                         change_type=None, count=None, page=None):
+        return self.get('team.integrationLogs',
+                        params={
+                            'service_id': service_id,
+                            'app_id': app_id,
+                            'user': user,
+                            'change_type': change_type,
+                            'count': count,
+                            'page': page,
+                        })
 
 
 class Reactions(BaseAPI):
